@@ -85,6 +85,21 @@ public static class Inject
             return false;
         }
     }
+    
+    public static void LaunchMinecraft()
+    {
+        if (Process.GetProcessesByName("Minecraft.Windows").Length > 0) return;
+        
+        Logger.Log("Inject", "Launching Minecraft");
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "explorer.exe",
+            Arguments = "shell:appsFolder\\Microsoft.MinecraftUWP_8wekyb3d8bbwe!App",
+            UseShellExecute = true
+        };
+        Process.Start(startInfo);
+        Thread.Sleep(2000);
+    }
 
     private static void ApplyAppPackages(string dllPath)
     {

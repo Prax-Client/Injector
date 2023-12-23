@@ -17,6 +17,8 @@ class Program
 ██║     ██║  ██║██║  ██║██╔╝ ██╗    ██║██║ ╚████║╚█████╔╝███████╗╚██████╗   ██║   ╚██████╔╝██║  ██║
 ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝╚═╝  ╚═══╝ ╚════╝ ╚══════╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝");
         Console.ForegroundColor = ConsoleColor.Magenta;
+
+        Inject.LaunchMinecraft();
         
         bool downloaded = await Inject.Download();
 
