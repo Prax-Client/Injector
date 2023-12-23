@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Injector;
+﻿namespace Injector;
 
 public static class Logger
 {
@@ -36,9 +34,4 @@ public static class Logger
         Console.WriteLine(message);
     }
 
-    public static void Log(string message, LType lType = LType.Info)
-    {
-        string sender = new StackTrace().GetFrame(1)!.GetMethod()!.DeclaringType?.Name;
-        Log(sender, message, lType);
-    }
 }

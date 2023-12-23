@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 
@@ -33,52 +33,55 @@ public static class Inject
         IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter,
         uint dwCreationFlags, IntPtr lpThreadId);
 
-    
+    private static string Path => Environment.ExpandEnvironmentVariables("%temp%\\Prax.dll");
+    private const string Url = "https://github.com/Prax-Client/Releases/releases/latest/download/Prax.dll";
     public static async Task<bool> Download()
     {
         try
         {
-            // If the file already exists, delete it
-            if (File.Exists("Prax.dll"))
+            // If the file already exists, and compare hashes if it does
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Add("User-Agent", "Prax Injector");
+
+            if (File.Exists(Path))
             {
-                Logger.Log("Deleting old Prax.dll");
-                File.Delete("Prax.dll");
+                Logger.Log("Download", "Prax.dll already exists, checking hashes");
+                using var hasher = MD5.Create();
+                await using var stream = File.OpenRead(Path);
+                var hash = await hasher.ComputeHashAsync(stream);
+                
+                // Send a head request to get the hash of the latest release
+                var headResponse = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, Url));
+                
+                var otherHash = headResponse.Content.Headers.ContentMD5;
+                
+                // If the hashes are the same, return true
+                if (hash.SequenceEqual(otherHash))
+                {
+                    Logger.Log("Download", "Hashes match, skipping download");
+                    return true;
+                }
+            }
+
+            // Create new http client instance
+            Logger.Log("Download", "Downloading Prax.dll");
+            var response = await client.GetAsync(Url);
+            
+            // If the response is not successful, return false
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Log("Download", "Failed to download Prax.dll", Logger.LType.Error);
+                return false;
             }
             
-            
-            // Create new http client instance
-            HttpClient client = new HttpClient();
-        
-            // Set user agent to "Prax Injector"
-            client.DefaultRequestHeaders.Add("User-Agent", "Prax Injector");
-        
-            // send get to https://api.github.com/repos/Prax-Client/Releases/releases/latest
-            var response = await client.GetAsync("https://api.github.com/repos/Prax-Client/Releases/releases/latest");
-            Logger.Log("Got response from github");
-
-            // read response as string
-            var responseString = await response.Content.ReadAsStringAsync();
-        
-            // Get the download url from the response
-            var downloadUrl = responseString.Split("\"browser_download_url\":")[1].Split(",")[0].Replace("\"", "");
-        
-            // Remove the last two characters from the download url
-            downloadUrl = downloadUrl.Remove(downloadUrl.Length - 2);
-        
-            Logger.Log("Download URL: " + downloadUrl);
-        
-            // send get to download url
-            var downloadResponse = await client.GetAsync(downloadUrl);
-        
-            // Stream the response to a file (DLL)
-            await downloadResponse.Content.ReadAsStreamAsync().Result.CopyToAsync(File.Create("Prax.dll"));
-
+            var content = await response.Content.ReadAsByteArrayAsync();
+            await File.WriteAllBytesAsync(Path, content);
 
             return true;
         }
         catch (Exception e)
         {
-            Logger.Log("Failed to download Prax.dll " + e, Logger.LType.Error);
+            Logger.Log("Download", "Failed to download Prax.dll " + e, Logger.LType.Error);
             return false;
         }
     }
@@ -93,29 +96,38 @@ public static class Inject
         infoFile.SetAccessControl(fSecurity);
     }
     
-    public static void InjectDLL()
+    public static bool InjectDLL()
     {
-        string path = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName) + "\\Prax.dll";
-        
-        Logger.Log("Injecting " + path);
 
-        ApplyAppPackages(path);
+        Logger.Log("InjectDLL", "Injecting " + Path);
+
+        ApplyAppPackages(Path);
         var target = Process.GetProcessesByName("Minecraft.Windows").FirstOrDefault();
         if (target == null)
         {
-            Logger.Log("Failed to find Minecraft.Windows process", Logger.LType.Error);
-            return;
+            Logger.Log("InjectDLL", "Failed to find Minecraft.Windows process", Logger.LType.Error);
+            return false;
+        }
+        
+        // Check if the dll is already injected
+        var modules = target.Modules.Cast<ProcessModule>().ToList();
+        if (modules.Any(module => module.FileName == Path))
+        {
+            Logger.Log("InjectDLL", "Prax.dll is already injected", Logger.LType.Error);
+            return false;
         }
 
-        Logger.Log("Injecting Prax.dll");
+        Logger.Log("InjectDLL", "Injecting Prax.dll");
 
         var hProc = OpenProcess(0xFFFF, false, target.Id);
         var loadLibraryProc = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
-        var allocated = VirtualAllocEx(hProc, IntPtr.Zero, (uint)path.Length + 1, 0x00001000 | 0x00002000,
+        var allocated = VirtualAllocEx(hProc, IntPtr.Zero, (uint)Path.Length + 1, 0x00001000 | 0x00002000,
             0x40);
-        WriteProcessMemory(hProc, allocated, Encoding.UTF8.GetBytes(path), (uint)path.Length + 1, out _);
-        Logger.Log("Allocated memory");
+        WriteProcessMemory(hProc, allocated, Encoding.UTF8.GetBytes(Path), (uint)Path.Length + 1, out _);
+        Logger.Log("InjectDLL", "Allocated memory");
         CreateRemoteThread(hProc, IntPtr.Zero, 0, loadLibraryProc, allocated, 0, IntPtr.Zero);
-        Logger.Log("Remote thread created");
+        Logger.Log("InjectDLL", "Remote thread created");
+        Logger.Log("InjectDLL", "Prax.dll injected");
+        return true;
     }
 }
