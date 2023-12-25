@@ -101,7 +101,7 @@ public class Debug
         
         
         
-        Logger.Log("Debug", "Checks complete");
+        Logger.Log("Debug", "Checks complete, Send a picture of this in your support ticket and make sure all text is readable.");
         
         
     }
