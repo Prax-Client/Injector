@@ -35,28 +35,44 @@ public static class Inject
 
     private static string Path => Environment.ExpandEnvironmentVariables("%temp%\\Prax.dll");
     private const string Url = "https://github.com/Prax-Client/Releases/releases/latest/download/Prax.dll";
+
+    public static async Task<bool> CheckHash(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            Logger.Log("CheckHash", "Prax.dll does not exist", Logger.LType.Error);
+            return false;
+        } 
+        
+        // Send a head request to get the hash of the latest release
+        var headResponse = await Program.Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, Url));
+                
+        var otherHash = headResponse.Content.Headers.ContentMD5;
+
+        if (otherHash == null)
+        {
+            Logger.Log("CheckHash", "Failed to get hash of latest release", Logger.LType.Error);
+            return false;
+        }
+        
+        using var hasher = MD5.Create();
+        await using var stream = File.OpenRead(filePath);
+        var hash = await hasher.ComputeHashAsync(stream);
+        
+        return hash.SequenceEqual(otherHash);
+    }
+    
     public static async Task<bool> Download()
     {
         try
         {
             // If the file already exists, and compare hashes if it does
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Add("User-Agent", "Prax Injector");
-
             if (File.Exists(Path))
             {
                 Logger.Log("Download", "Prax.dll already exists, checking hashes");
-                using var hasher = MD5.Create();
-                await using var stream = File.OpenRead(Path);
-                var hash = await hasher.ComputeHashAsync(stream);
-                
-                // Send a head request to get the hash of the latest release
-                var headResponse = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, Url));
-                
-                var otherHash = headResponse.Content.Headers.ContentMD5;
-                
+               
                 // If the hashes are the same, return true
-                if (hash.SequenceEqual(otherHash))
+                if (await CheckHash(Path))
                 {
                     Logger.Log("Download", "Hashes match, skipping download");
                     return true;
@@ -65,7 +81,7 @@ public static class Inject
 
             // Create new http client instance
             Logger.Log("Download", "Downloading Prax.dll");
-            var response = await client.GetAsync(Url);
+            var response = await Program.Client.GetAsync(Url);
             
             // If the response is not successful, return false
             if (!response.IsSuccessStatusCode)

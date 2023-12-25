@@ -1,0 +1,98 @@
+﻿namespace Injector;
+
+public class Debug
+{
+    static bool ConnectionToServer()
+    {
+        // Send get to https://prax.wtf/
+        // If the response is not 200, return false
+        
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://prax.wtf/");
+        
+        var response = Program.Client.Send(request);
+        
+        return response.IsSuccessStatusCode;
+    }
+
+    static bool ConnectionToKS()
+    {
+        // Send get to https://pastebin.com/raw/SanmjGbw
+        
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://pastebin.com/raw/SanmjGbw");
+        
+        var response = Program.Client.Send(request);
+        
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            Logger.Log("Debug", "Failed to get KS", Logger.LType.Error);
+            return false;
+        }
+
+        var content = response.Content.ReadAsStringAsync().Result;
+        
+        if (content != "false")
+        {
+            Logger.Log("Debug", "KS returned false", Logger.LType.Error);
+            return false;
+        }
+
+        return true;
+    }
+    
+    // Check C:\Users\Flash\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\RoamingState
+    static bool CheckDirectories()
+    {
+        var praxDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\RoamingState\Prax");
+        
+        if (!Directory.Exists(praxDir)) return false;
+
+        // Create tree of all subdirectories and files
+        
+        var tree = new List<string>();
+
+        Logger.Log("Debug", "Checking files...");
+        foreach (var dir in Directory.GetDirectories(praxDir))
+        {
+            Logger.Log("Debug", "Directory found: " + dir);
+            foreach (var file in Directory.GetFiles(dir))
+            {
+                Logger.Log("Debug", "File found: " + file);
+            }
+        }
+
+
+        return true;
+    }
+    
+    static bool IsGameUpToDate()
+    {
+        
+        return true;
+    }
+    
+    public static void PerformChecks()
+    {
+        Logger.Log("Debug", "Performing checks");
+        
+        bool connectionToServer = ConnectionToServer();
+        Logger.Log("Debug", "Checking connection to server...");
+        Logger.Log("Debug", connectionToServer ? "Connection to server successful" : "Connection to server failed", connectionToServer ? Logger.LType.Info : Logger.LType.Error);
+        
+        bool connectionToKs = ConnectionToKS();
+        Logger.Log("Debug", "Checking connection to KS...");
+        Logger.Log("Debug", connectionToKs ? "Connection to KS successful" : "Connection to KS failed", connectionToKs ? Logger.LType.Info : Logger.LType.Error);
+        
+        bool checkDirectories = CheckDirectories();
+        Logger.Log("Debug", "Checking directories...");
+        Logger.Log("Debug", checkDirectories ? "Directories exist" : "Directories do not exist", checkDirectories ? Logger.LType.Info : Logger.LType.Error);
+        
+        
+        
+        
+        
+        Logger.Log("Debug", "Checks complete");
+        
+        
+    }
+}
