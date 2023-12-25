@@ -191,7 +191,7 @@ public static class Inject
         // Get-AppxPackage -Name Microsoft.MinecraftUWP | Select-Object -ExpandProperty Version
         try
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo
+            /*ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
                 Arguments = "Get-AppxPackage -Name Microsoft.MinecraftUWP | Select-Object -ExpandProperty Version",
@@ -203,8 +203,19 @@ public static class Inject
             string output = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
             // Remove all whitespace and newlines
-            output = output.Replace("\n", "").Replace("\r", "").Replace(" ", "");
-            return output;
+            output = output.Replace("\n", "").Replace("\r", "").Replace(" ", "");*/
+            
+            // Get file version of Minecraft.Windows.exe
+            // Get the minecraft folder
+            LaunchMinecraft();
+            
+            string mcExecutable = Process.GetProcessesByName("Minecraft.Windows").FirstOrDefault()?.MainModule.FileName;
+            
+            // Get the file version
+            string mcVersion = FileVersionInfo.GetVersionInfo(mcExecutable).FileVersion;
+            
+            
+            return mcVersion;
         }
         catch (Exception e)
         {

@@ -22,6 +22,17 @@ class Program
 ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝    ╚═╝╚═╝  ╚═══╝ ╚════╝ ╚══════╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝");
         Console.ForegroundColor = ConsoleColor.White;
 
+        
+        // Check for --debug flag
+        if (args.Length > 0 && args[0] == "--debug")
+        {
+            Debug.PerformChecks();
+            
+            Logger.Log("Main", "Press any key to exit.");
+            Console.ReadKey(true);
+            return;
+        }
+        
         Logger.Log("Main", "Checking version...");
         string latestSupportedVersion = Inject.GetLatestSupportedVersion();  
         string mcVersion = Inject.GetMinecraftVersion();
@@ -38,15 +49,6 @@ class Program
         } else if (latestSupportedVersion == string.Empty) Logger.Log("Main", "Failed to get latest supported version!", Logger.LType.Error);
         else Logger.Log("Main", $"Minecraft version {mcVersion} is supported.", Logger.LType.Info);
 
-        // Check for --debug flag
-        if (args.Length > 0 && args[0] == "--debug")
-        {
-            Debug.PerformChecks();
-            
-            Logger.Log("Main", "Press any key to exit.");
-            Console.ReadKey(true);
-            return;
-        }
         
         Inject.LaunchMinecraft();
         

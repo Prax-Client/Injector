@@ -67,8 +67,14 @@ public class Debug
     
     static bool IsGameUpToDate()
     {
+        string latestSupportedVersion = Inject.GetLatestSupportedVersion();
+        string mcVersion = Inject.GetMinecraftVersion();
         
-        return true;
+        Logger.Log("Debug", $"Latest supported version: {latestSupportedVersion}");
+        Logger.Log("Debug", $"Minecraft version: {mcVersion}");
+
+
+        return mcVersion.StartsWith(latestSupportedVersion) && latestSupportedVersion != string.Empty;
     }
     
     public static void PerformChecks()
@@ -86,6 +92,10 @@ public class Debug
         bool checkDirectories = CheckDirectories();
         Logger.Log("Debug", "Checking directories...");
         Logger.Log("Debug", checkDirectories ? "Directories exist" : "Directories do not exist", checkDirectories ? Logger.LType.Info : Logger.LType.Error);
+        
+        bool isGameUpToDate = IsGameUpToDate();
+        Logger.Log("Debug", "Checking if game is up to date...");
+        Logger.Log("Debug", isGameUpToDate ? "Game is up to date" : "It's possible the game version is not supported", isGameUpToDate ? Logger.LType.Info : Logger.LType.Error);
         
         
         
