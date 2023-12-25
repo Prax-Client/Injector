@@ -145,4 +145,55 @@ public static class Inject
         Logger.Log("InjectDLL", "Prax.dll injected");
         return true;
     }
+
+    public static string GetLatestSupportedVersion()
+    {
+        // https://raw.githubusercontent.com/Prax-Client/Releases/main/latest_supported.txt
+        try
+        {
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Add("User-Agent", "Prax Injector");
+            var response = client.GetAsync("https://raw.githubusercontent.com/Prax-Client/Releases/main/latest_supported.txt").Result;
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Log("GetLatestSupportedVersion", "Failed to get latest supported version", Logger.LType.Error);
+                return string.Empty;
+            }
+
+            return response.Content.ReadAsStringAsync().Result;
+        }
+        catch (Exception e)
+        {
+            Logger.Log("GetLatestSupportedVersion", "Failed to get latest supported version " + e, Logger.LType.Error);
+            return string.Empty;
+        }
+    }
+
+    public static string GetMinecraftVersion()
+    {
+        // Get version of Microsoft.MinecraftUWP appx using powershell
+        // Get-AppxPackage -Name Microsoft.MinecraftUWP | Select-Object -ExpandProperty Version
+        try
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = "Get-AppxPackage -Name Microsoft.MinecraftUWP | Select-Object -ExpandProperty Version",
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            };
+            Process process = new Process {StartInfo = startInfo};
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+            // Remove all whitespace and newlines
+            output = output.Replace("\n", "").Replace("\r", "").Replace(" ", "");
+            return output;
+        }
+        catch (Exception e)
+        {
+            Logger.Log("GetMinecraftVersion", "Failed to get Minecraft version " + e, Logger.LType.Error);
+            return string.Empty;
+        }
+    }
 }
