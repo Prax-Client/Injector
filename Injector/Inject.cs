@@ -7,32 +7,36 @@ using System.Text;
 
 namespace Injector;
 
-public static class Inject
+public static partial class Inject
 {
+
+    // Matthews, C.M. (2023) JiayiLauncher/JiayiLauncher/Utils/Imports.cs, GitHub. Available at: https://github.com/JiayiSoftware/JiayiLauncher/blob/66d3099060685ca69406bdec8b2910613c0420d0/JiayiLauncher/Utils/Imports.cs#L31-L52 (Accessed: 27 December 2023). 
     
-    [DllImport("kernel32.dll", EntryPoint = "OpenProcess")]
-    private static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+    
+    
+    // (JiayiLauncher/JiayiLauncher/Utils/Imports.cs 2023)
+    [LibraryImport("kernel32.dll")]
+    public static partial nint OpenProcess(int dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
 
-    [DllImport("kernel32.dll", EntryPoint = "GetModuleHandle", CharSet = CharSet.Auto)]
-    private static extern IntPtr GetModuleHandle(string lpModuleName);
+    [LibraryImport("kernel32.dll")]
+    public static partial nint GetModuleHandleW([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
 
-    [DllImport("kernel32", EntryPoint = "GetProcAddress", CharSet = CharSet.Ansi, ExactSpelling = true,
-        SetLastError = true)]
-    private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+    [LibraryImport("kernel32", SetLastError = true)]
+    public static partial nint GetProcAddress(nint hModule, [MarshalAs(UnmanagedType.LPStr)] string procName);
 
-    [DllImport("kernel32.dll", EntryPoint = "VirtualAllocEx", SetLastError = true, ExactSpelling = true)]
-    private static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress,
-        uint dwSize, uint flAllocationType, uint flProtect);
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    public static partial nint VirtualAllocEx(nint hProcess, nint lpAddress, uint dwSize,
+        uint flAllocationType, uint flProtect);
+	
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool WriteProcessMemory(nint hProcess, nint lpBaseAddress, byte[] lpBuffer, uint nSize,
+        out nuint lpNumberOfBytesWritten);
 
-    [DllImport("kernel32.dll", EntryPoint = "WriteProcessMemory", SetLastError = true)]
-    private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer,
-        uint nSize, out UIntPtr lpNumberOfBytesWritten);
-
-    [DllImport("kernel32.dll", EntryPoint = "CreateRemoteThread")]
-    private static extern IntPtr CreateRemoteThread(IntPtr hProcess,
-        IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter,
-        uint dwCreationFlags, IntPtr lpThreadId);
-
+    [LibraryImport("kernel32.dll")]
+    public static partial nint CreateRemoteThread(nint hProcess, nint lpThreadAttributes, uint dwStackSize,
+        nint lpStartAddress, nint lpParameter, uint dwCreationFlags, nint lpThreadId);
+    
     private static string Path => Environment.ExpandEnvironmentVariables("%temp%\\Prax.dll");
     private const string Url = "https://github.com/Prax-Client/Releases/releases/latest/download/Prax.dll";
 
@@ -151,7 +155,7 @@ public static class Inject
         Logger.Log("InjectDLL", "Injecting Prax.dll");
 
         var hProc = OpenProcess(0xFFFF, false, target.Id);
-        var loadLibraryProc = GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
+        var loadLibraryProc = GetProcAddress(GetModuleHandleW("kernel32.dll"), "LoadLibraryA");
         var allocated = VirtualAllocEx(hProc, IntPtr.Zero, (uint)Path.Length + 1, 0x00001000 | 0x00002000,
             0x40);
         WriteProcessMemory(hProc, allocated, Encoding.UTF8.GetBytes(Path), (uint)Path.Length + 1, out _);

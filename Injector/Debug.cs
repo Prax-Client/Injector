@@ -14,26 +14,16 @@ public class Debug
         return response.IsSuccessStatusCode;
     }
 
-    static bool ConnectionToKS()
+    static bool ConnectionToGithub()
     {
-        // Send get to https://pastebin.com/raw/SanmjGbw
-        
-        var request = new HttpRequestMessage(HttpMethod.Get, "https://pastebin.com/raw/SanmjGbw");
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://github.com");
         
         var response = Program.Client.Send(request);
         
         
         if (!response.IsSuccessStatusCode)
         {
-            Logger.Log("Debug", "Failed to get KS", Logger.LType.Error);
-            return false;
-        }
-
-        var content = response.Content.ReadAsStringAsync().Result;
-        
-        if (content != "false")
-        {
-            Logger.Log("Debug", "KS returned false", Logger.LType.Error);
+            Logger.Log("Debug", "Failed to GET Github", Logger.LType.Error);
             return false;
         }
 
@@ -80,25 +70,22 @@ public class Debug
     public static void PerformChecks()
     {
         Logger.Log("Debug", "Performing checks");
-        
-        bool connectionToServer = ConnectionToServer();
+
         Logger.Log("Debug", "Checking connection to server...");
+        bool connectionToServer = ConnectionToServer();
         Logger.Log("Debug", connectionToServer ? "Connection to server successful" : "Connection to server failed", connectionToServer ? Logger.LType.Info : Logger.LType.Error);
-        
-        bool connectionToKs = ConnectionToKS();
-        Logger.Log("Debug", "Checking connection to KS...");
-        Logger.Log("Debug", connectionToKs ? "Connection to KS successful" : "Connection to KS failed", connectionToKs ? Logger.LType.Info : Logger.LType.Error);
-        
-        bool checkDirectories = CheckDirectories();
+
+        Logger.Log("Debug", "Checking connection to Github...");
+        bool connectionToGithub = ConnectionToGithub();
+        Logger.Log("Debug", connectionToGithub ? "Connection to Github successful" : "Connection to Github failed", connectionToGithub ? Logger.LType.Info : Logger.LType.Error);
+
         Logger.Log("Debug", "Checking directories...");
+        bool checkDirectories = CheckDirectories();
         Logger.Log("Debug", checkDirectories ? "Directories exist" : "Directories do not exist", checkDirectories ? Logger.LType.Info : Logger.LType.Error);
-        
-        bool isGameUpToDate = IsGameUpToDate();
+
         Logger.Log("Debug", "Checking if game is up to date...");
+        bool isGameUpToDate = IsGameUpToDate();
         Logger.Log("Debug", isGameUpToDate ? "Game is up to date" : "It's possible the game version is not supported", isGameUpToDate ? Logger.LType.Info : Logger.LType.Error);
-        
-        
-        
         
         
         Logger.Log("Debug", "Checks complete, Send a picture of this in your support ticket and make sure all text is readable.");
