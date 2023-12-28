@@ -118,7 +118,26 @@ public static partial class Inject
             UseShellExecute = true
         };
         Process.Start(startInfo);
-        Thread.Sleep(2000);
+        Process? mcProcess = null;
+        
+        while (mcProcess == null)
+        {
+            mcProcess = Process.GetProcessesByName("Minecraft.Windows").FirstOrDefault();
+            Thread.Sleep(100);
+        }
+        
+        Logger.Log("Inject", "Minecraft launched");
+        // Wait for the module count to be more than 120 (the amount of modules loaded when the game is fully loaded)
+        bool msgShown = false;
+        while (mcProcess.Modules.Count < 120)
+        {
+            mcProcess.Refresh();
+            Logger.LogWrite("Inject", $"Waiting for Minecraft to load... ({mcProcess.Modules.Count}/120)    \r");
+            Thread.Sleep(100);
+        }
+
+        Console.WriteLine();
+        Logger.Log("Inject", "Minecraft loaded");
     }
 
     private static void ApplyAppPackages(string dllPath)
