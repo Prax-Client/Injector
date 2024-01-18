@@ -187,12 +187,12 @@ public static partial class Inject
 
     public static string GetLatestSupportedVersion()
     {
-        // https://raw.githubusercontent.com/Prax-Client/Releases/main/latest_supported.txt
+        // https://raw.githubusercontent.com/Prax-Client/Releases/main/latest.txt
         try
         {
             HttpClient client = new HttpClient();
             client.DefaultRequestHeaders.Add("User-Agent", "Prax Injector");
-            var response = client.GetAsync("https://raw.githubusercontent.com/Prax-Client/Releases/main/latest_supported.txt").Result;
+            var response = client.GetAsync("https://raw.githubusercontent.com/Prax-Client/Releases/main/latest.txt").Result;
             if (!response.IsSuccessStatusCode)
             {
                 Logger.Log("GetLatestSupportedVersion", "Failed to get latest supported version", Logger.LType.Error);
