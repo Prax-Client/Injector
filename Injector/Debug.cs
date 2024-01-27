@@ -39,16 +39,15 @@ public class Debug
 
         // Create tree of all subdirectories and files
         
-        var tree = new List<string>();
+        // needed?
+        //var tree = new List<string>();
 
         Logger.Log("Debug", "Checking files...");
-        foreach (var dir in Directory.GetDirectories(praxDir))
+        
+        foreach (var file in Directory.GetFiles(praxDir, "*", SearchOption.AllDirectories))
         {
-            Logger.Log("Debug", "Directory found: " + dir);
-            foreach (var file in Directory.GetFiles(dir))
-            {
-                Logger.Log("Debug", "File found: " + file);
-            }
+            Logger.Log("Debug", "Directory found: " + Path.GetDirectoryName(file));
+            Logger.Log("Debug", "File found: " + file);
         }
 
 
@@ -88,7 +87,7 @@ public class Debug
         Logger.Log("Debug", isGameUpToDate ? "Game is up to date" : "It's possible the game version is not supported", isGameUpToDate ? Logger.LType.Info : Logger.LType.Error);
         
         
-        Logger.Log("Debug", "Checks complete, Send a picture of this in your support ticket and make sure all text is readable.");
+        Logger.Log("Debug", "Checks complete. Send a screenshot of this in your support ticket and make sure all text is readable.");
         
         
     }
