@@ -46,7 +46,6 @@ public class Debug
         
         foreach (var file in Directory.GetFiles(praxDir, "*", SearchOption.AllDirectories))
         {
-            Logger.Log("Debug", "Directory found: " + Path.GetDirectoryName(file));
             Logger.Log("Debug", "File found: " + file);
         }
 
