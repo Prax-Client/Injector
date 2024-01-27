@@ -153,13 +153,13 @@ public static partial class Inject
     public static bool InjectDLL()
     {
 
-        Logger.Log("InjectDLL", "Injecting " + Path);
+        Logger.Log("Inject", "Injecting " + Path);
 
         ApplyAppPackages(Path);
         var target = Process.GetProcessesByName("Minecraft.Windows").FirstOrDefault();
         if (target == null)
         {
-            Logger.Log("InjectDLL", "Failed to find Minecraft.Windows process", Logger.LType.Error);
+            Logger.Log("Inject", "Failed to find Minecraft.Windows process", Logger.LType.Error);
             return false;
         }
         
@@ -167,21 +167,20 @@ public static partial class Inject
         var modules = target.Modules.Cast<ProcessModule>().ToList();
         if (modules.Any(module => module.FileName == Path))
         {
-            Logger.Log("InjectDLL", "Prax.dll is already injected", Logger.LType.Error);
+            Logger.Log("Inject", "Prax.dll is already injected", Logger.LType.Error);
             return false;
         }
 
-        Logger.Log("InjectDLL", "Injecting Prax.dll");
+        Logger.Log("Inject", "Injecting Prax.dll");
 
         var hProc = OpenProcess(0xFFFF, false, target.Id);
         var loadLibraryProc = GetProcAddress(GetModuleHandleW("kernel32.dll"), "LoadLibraryA");
         var allocated = VirtualAllocEx(hProc, IntPtr.Zero, (uint)Path.Length + 1, 0x00001000 | 0x00002000,
             0x40);
         WriteProcessMemory(hProc, allocated, Encoding.UTF8.GetBytes(Path), (uint)Path.Length + 1, out _);
-        Logger.Log("InjectDLL", "Allocated memory");
+        Logger.Log("Inject", "Allocated memory");
         CreateRemoteThread(hProc, IntPtr.Zero, 0, loadLibraryProc, allocated, 0, IntPtr.Zero);
-        Logger.Log("InjectDLL", "Remote thread created");
-        Logger.Log("InjectDLL", "Prax.dll injected");
+        Logger.Log("Inject", "Remote thread created");
         return true;
     }
 

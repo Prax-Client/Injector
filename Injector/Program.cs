@@ -9,7 +9,7 @@ class Program
     
     public static async Task Main(string[] args)
     {
-        Program.Client.DefaultRequestHeaders.Add("User-Agent", "Prax Injector");
+        Client.DefaultRequestHeaders.Add("User-Agent", "Prax Injector");
         Console.Title = "Prax Injector";
         
         Console.ForegroundColor = ConsoleColor.Magenta;
@@ -47,7 +47,7 @@ class Program
             
             Logger.Log("Main", "Continuing...");
         } else if (latestSupportedVersion == string.Empty) Logger.Log("Main", "Failed to get latest supported version!", Logger.LType.Error);
-        else Logger.Log("Main", $"Minecraft version {mcVersion} is supported.", Logger.LType.Info);
+        else Logger.Log("Main", $"Minecraft version {mcVersion} is supported.");
 
         
         Inject.LaunchMinecraft();
@@ -63,7 +63,11 @@ class Program
         }
         
         bool result = Inject.InjectDLL();
-        if (result) Thread.Sleep(2000);
+        if (result)
+        {
+            Logger.Log("Main", "Prax injected successfully! Press insert in game to open the menu.");
+            Thread.Sleep(5000);
+        }
         else
         {
             Logger.Log("Main", "Failed to inject Prax.dll", Logger.LType.Error);
